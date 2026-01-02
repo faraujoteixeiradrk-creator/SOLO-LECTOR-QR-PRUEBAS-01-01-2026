@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escáner QR Profesional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .qr-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center p-4">
+
+    <!-- Header Area -->
+    <div class="w-full max-w-md mt-8 mb-6 text-center">
+        <div class="qr-gradient w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+            </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-800">Escáner de Potencia</h1>
+        <p class="text-gray-500 mt-2">Integración directa con Binary Eye para códigos difíciles</p>
+    </div>
+
+    <!-- Main Card -->
+    <main class="w-full max-w-md bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
+        
+        <!-- Result Display -->
+        <div id="result-container" class="hidden mb-6">
+            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Información Capturada</label>
+            <div id="result-text" class="p-4 bg-green-50 border border-green-200 rounded-xl text-green-800 break-all font-mono text-sm">
+                <!-- El resultado aparecerá aquí -->
+            </div>
+            <button onclick="clearResult()" class="mt-3 text-sm text-gray-400 hover:text-gray-600 transition-colors">Limpiar resultado</button>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="space-y-4">
+            <p id="instruction" class="text-sm text-gray-600 leading-relaxed">
+                Pulsa el botón de abajo para activar el escáner externo. La aplicación procesará la imagen con máxima precisión y devolverá los datos aquí.
+            </p>
+
+            <button id="scan-btn" class="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                INICIAR ESCANEO PRO
+            </button>
+        </div>
+
+        <!-- Help Section -->
+        <div class="mt-8 pt-6 border-t border-gray-100">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">¿Cómo funciona esto?</h3>
+            <ul class="text-xs text-gray-500 space-y-2">
+                <li class="flex gap-2">
+                    <span class="text-blue-500 font-bold">1.</span>
+                    Requiere tener instalado <strong>Binary Eye</strong> (Gratis en Play Store / F-Droid).
+                </li>
+                <li class="flex gap-2">
+                    <span class="text-blue-500 font-bold">2.</span>
+                    Usa algoritmos de corrección de imagen superiores a los del navegador.
+                </li>
+                <li class="flex gap-2">
+                    <span class="text-blue-500 font-bold">3.</span>
+                    Devuelve el contenido vía parámetro URL automáticamente.
+                </li>
+            </ul>
+        </div>
+    </main>
+
+    <script>
+        // Lógica para detectar el retorno de la APP
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const scannedCode = urlParams.get('code');
+
+            if (scannedCode) {
+                document.getElementById('result-container').classList.remove('hidden');
+                document.getElementById('result-text').innerText = decodeURIComponent(scannedCode);
+                document.getElementById('instruction').innerText = "¡Código leído con éxito! Puedes volver a escanear si lo deseas.";
+            }
+
+            // Configurar el botón dinámicamente con la URL actual
+            setupScanButton();
+        };
+
+            // Obtenemos la URL actual sin parámetros para que la APP sepa dónde volver
+        function setupScanButton() {
+            const returnUrl = window.location.href.split('?')[0];
+            
+            // Construimos el Intent de Android
+            // {CODE} es el placeholder que Binary Eye sustituirá por el valor del QR
+            const intentPath = `intent://scan/?ret=${encodeURIComponent(returnUrl + '?code={CODE}')}#Intent;scheme=zxing;package=de.markusfisch.android.binaryeye;end`;
+            
+            document.getElementById('scan-btn').parentElement.href = intentPath;
+            
+            // Envolver en un link real para el intent
+            const btn = document.getElementById('scan-btn');
+            const link = document.createElement('a');
+            link.href = intentPath;
+            link.className = "block w-full";
+            btn.parentNode.replaceChild(link, btn);
+            link.appendChild(btn);
+        }
+
+        function clearResult() {
+            window.history.replaceState({}, document.title, window.location.pathname);
+            document.getElementById('result-container').classList.add('hidden');
+            document.getElementById('instruction').innerText = "Pulsa el botón de abajo para activar el escáner externo.";
+        }
+    </script>
+</body>
+</html>
