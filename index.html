@@ -11,7 +11,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .qr-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .btn-shadow { box-shadow: 0 4px 14px 0 rgba(0, 118, 255, 0.39); }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col items-center p-4">
@@ -45,31 +44,30 @@
         <div class="bg-white rounded-3xl shadow-md p-6 border border-gray-100">
             <h2 class="font-bold text-gray-800 mb-2 flex items-center gap-2">
                 <span class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xs">1</span>
-                Escaneo de Alta Potencia
+                Escaneo de Alta Potencia (Android)
             </h2>
-            <p class="text-sm text-gray-500 mb-4">Usa Binary Eye para códigos muy borrosos o pequeños.</p>
+            <p class="text-sm text-gray-500 mb-4 italic">Ideal para códigos borrosos. Requiere la app "Binary Eye".</p>
             
-            <a id="intent-link" href="#" class="block w-full">
-                <button class="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    </svg>
-                    ABRIR CÁMARA PRO
-                </button>
-            </a>
+            <button onclick="handleProScan()" class="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                </svg>
+                ABRIR CÁMARA PRO
+            </button>
         </div>
 
         <!-- Opción 2: Subir Foto (Desde Galería/Cámara propia) -->
         <div class="bg-white rounded-3xl shadow-md p-6 border border-gray-100">
             <h2 class="font-bold text-gray-800 mb-2 flex items-center gap-2">
                 <span class="flex h-6 w-6 items-center justify-center rounded-full bg-purple-100 text-purple-600 text-xs">2</span>
-                Subir Foto o Captura
+                Cámara Directa o Galería
             </h2>
-            <p class="text-sm text-gray-500 mb-4">Selecciona una imagen de tu galería o usa tu cámara normal.</p>
+            <p class="text-sm text-gray-500 mb-4">Usa la cámara de tu móvil para tomar una foto o sube una captura.</p>
             
             <label class="block w-full">
                 <span class="sr-only">Seleccionar archivo</span>
-                <input type="file" accept="image/*" onchange="handleFileUpload(this)" class="block w-full text-sm text-gray-500
+                <!-- capture="environment" intenta abrir la cámara trasera directamente -->
+                <input type="file" accept="image/*" capture="environment" onchange="handleFileUpload(this)" class="block w-full text-sm text-gray-500
                     file:mr-4 file:py-3 file:px-6
                     file:rounded-2xl file:border-0
                     file:text-sm file:font-bold
@@ -80,36 +78,39 @@
             <div id="loading" class="hidden mt-3 text-center text-sm text-purple-600 animate-pulse">Procesando imagen...</div>
         </div>
 
-        <!-- Hidden Canvas para procesamiento -->
         <canvas id="canvas" class="hidden"></canvas>
 
         <footer class="mt-8 text-center text-[10px] text-gray-400 uppercase tracking-widest pb-8">
-            Diseñado para máxima captura de datos
+            Si la Opción 1 falla, usa la Opción 2 (Cámara Directa)
         </footer>
     </main>
 
     <script>
-        // Al cargar la página
         window.onload = function() {
-            // 1. Verificar si venimos de Binary Eye con datos
             const urlParams = new URLSearchParams(window.location.search);
             const scannedCode = urlParams.get('code');
             if (scannedCode) {
                 showResult(decodeURIComponent(scannedCode));
             }
-
-            // 2. Configurar el enlace de Intent para la App externa
-            setupIntentLink();
         };
 
-        function setupIntentLink() {
+        function handleProScan() {
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            
+            if (!isAndroid) {
+                alert("La 'Cámara Pro' utiliza una función exclusiva de Android. En iPhone, por favor utiliza la 'Opción 2'.");
+                return;
+            }
+
             const returnUrl = window.location.href.split('?')[0];
-            // Construimos el intent. Nota: Esto requiere que Binary Eye esté instalado.
-            const intentPath = `intent://scan/?ret=${encodeURIComponent(returnUrl + '?code={CODE}')}#Intent;scheme=zxing;package=de.markusfisch.android.binaryeye;end`;
-            document.getElementById('intent-link').href = intentPath;
+            const fallbackUrl = "https://play.google.com/store/apps/details?id=de.markusfisch.android.binaryeye";
+            
+            // Intent con fallback por si la app no está instalada
+            const intentPath = `intent://scan/?ret=${encodeURIComponent(returnUrl + '?code={CODE}')}#Intent;scheme=zxing;package=de.markusfisch.android.binaryeye;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
+            
+            window.location.href = intentPath;
         }
 
-        // Función para manejar la subida de archivos (Galería o Cámara)
         function handleFileUpload(input) {
             const file = input.files[0];
             if (!file) return;
@@ -123,27 +124,22 @@
                 img.onload = function() {
                     const canvas = document.getElementById('canvas');
                     const ctx = canvas.getContext('2d');
-                    
-                    // Ajustar canvas al tamaño de la imagen
                     canvas.width = img.width;
                     canvas.height = img.height;
                     ctx.drawImage(img, 0, 0);
 
-                    // Obtener datos de píxeles
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    
-                    // Intentar decodificar
                     const code = jsQR(imageData.data, imageData.width, imageData.height, {
                         inversionAttempts: "dontInvert",
                     });
 
                     loading.classList.add('hidden');
-                    input.value = ""; // Limpiar input
+                    input.value = ""; 
 
                     if (code) {
                         showResult(code.data);
                     } else {
-                        alert("No se pudo localizar un código QR claro en esta imagen. Intenta con una foto más nítida o usa la 'Cámara Pro'.");
+                        alert("No se pudo leer el código. Intenta sacar la foto un poco más lejos para que enfoque mejor o asegúrate de que haya buena luz.");
                     }
                 };
                 img.src = e.target.result;
@@ -156,12 +152,10 @@
             const textElement = document.getElementById('result-text');
             textElement.innerText = text;
             container.classList.remove('hidden');
-            // Scroll suave hasta el resultado
             container.scrollIntoView({ behavior: 'smooth' });
         }
 
         function clearResult() {
-            // Limpiar la URL sin recargar
             window.history.replaceState({}, document.title, window.location.pathname);
             document.getElementById('result-container').classList.add('hidden');
         }
